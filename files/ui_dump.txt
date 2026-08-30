@@ -1,0 +1,1251 @@
+fn readUI =
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        PKD_PullPanel PKD_CurPanel
+
+
+
+
+
+
+
+        copy PKD_State
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    fn writeUI p =
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        PKD_State = copy p
+
+
+
+
+
+
+
+        PKD_PushPanel PKD_CurPanel
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ---------------------------------------------------------------- handlers
+
+
+
+
+
+
+
+    on cb1 changed st do PKD_ShowPanel 1     -- rBasic
+
+
+
+
+
+
+
+    on cb2 changed st do PKD_ShowPanel 7     -- rDoors
+
+
+
+
+
+
+
+    on cb3 changed st do PKD_ShowPanel 2     -- rAssembly
+
+
+
+
+
+
+
+    on cb4 changed st do PKD_ShowPanel 3     -- rBack
+
+
+
+
+
+
+
+    on cb5 changed st do PKD_ShowPanel 4     -- rLegs
+
+
+
+
+
+
+
+    on cb6 changed st do PKD_ShowPanel 5     -- rShelves
+
+
+
+
+
+
+
+    on cb7 changed st do PKD_ShowPanel 6     -- rParts
+
+
+
+
+
+
+
+    on cb8 changed st do PKD_ShowPanel 8     -- rMat
+
+
+
+
+
+
+
+    on cb9 changed st do PKD_ShowPanel 9     -- rHandles
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on chkLang changed state do
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        PKD_IsEnglish = state
+
+
+
+
+
+
+
+        applyCatLabels()
+
+
+
+
+
+
+
+        try ( PKD_LangPanel PKD_CurPanel PKD_IsEnglish ) catch ()
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on PKD_MainUI open do
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        PKD_SCALE = PKD_CalcScale()
+
+
+
+
+
+
+
+        PKD_CurPanel = 0
+
+
+
+
+
+
+
+        applyCatLabels()
+
+
+
+
+
+
+
+        PKD_ShowPanel 1 force:true
+
+
+
+
+
+
+
+        lblInfo.text = "System Unit Scale: 1cm = " + (formattedPrint PKD_SCALE format:".4f")
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on btnCreate pressed do
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        local p = readUI()
+
+
+
+
+
+
+
+        undo "PKD Create Unit" on ( with redraw off ( PKD_Build p oldGroup:undefined ) )
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on btnUpdate pressed do
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        local g = PKD_GetHead (if selection.count > 0 then selection[1] else undefined)
+
+
+
+
+
+
+
+        if g == undefined then
+
+
+
+
+
+
+
+            messagebox "يرجى تحديد وحدة معدلة أولاً." title:"تنبيه"
+
+
+
+
+
+
+
+        else
+
+
+
+
+
+
+
+        (
+
+
+
+
+
+
+
+            local p = readUI()
+
+
+
+
+
+
+
+            p.doorSides = (PKD_LoadProps g).doorSides   -- keep per-door hinge overrides
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+            local wasIsolated = false
+
+
+
+
+
+
+
+            try ( wasIsolated = IsolateSelection.IsolateSelectionModeActive() ) catch ( wasIsolated = false )
+
+
+
+
+
+
+
+            if wasIsolated do
+
+
+
+
+
+
+
+            (
+
+
+
+
+
+
+
+                try ( IsolateSelection.ExitIsolateSelectionMode() ) catch ()
+
+
+
+
+
+
+
+            )
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+            local newG = undefined
+
+
+
+
+
+
+
+            disableSceneRedraw()
+
+
+
+
+
+
+
+            try ( undo "PKD Update Unit" on ( with redraw off ( newG = PKD_Build p oldGroup:g ) ) ) catch ()
+
+
+
+
+
+
+
+            enableSceneRedraw()
+
+
+
+
+
+
+
+            completeRedraw()
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+            if newG != undefined do
+
+
+
+
+
+
+
+            (
+
+
+
+
+
+
+
+                select newG
+
+
+
+
+
+
+
+                if wasIsolated do
+
+
+
+
+
+
+
+                (
+
+
+
+
+
+
+
+                    try ( IsolateSelection.EnterIsolateSelectionMode() ) catch ()
+
+
+
+
+
+
+
+                )
+
+
+
+
+
+
+
+            )
+
+
+
+
+
+
+
+        )
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on btnRead pressed do
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        local g = PKD_GetHead (if selection.count > 0 then selection[1] else undefined)
+
+
+
+
+
+
+
+        if g == undefined then
+
+
+
+
+
+
+
+            messagebox "يرجى تحديد وحدة تم رسمها بالأداة لقراءة إعداداتها." title:"تنبيه"
+
+
+
+
+
+
+
+        else
+
+
+
+
+
+
+
+        (
+
+
+
+
+
+
+
+            PKD_ActiveUnit = g
+
+
+
+
+
+
+
+            writeUI (PKD_LoadProps g)
+
+
+
+
+
+
+
+            lblInfo.text = "Loaded: " + g.name
+
+
+
+
+
+
+
+        )
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on btnExport pressed do
+
+
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        local gs = PKD_SelectedUnits()
+
+
+
+
+
+
+
+        if gs.count == 0 then
+
+
+
+
+
+
+
+            messagebox "يرجى تحديد وحدة للتصدير أولاً." title:"تنبيه"
+
+
+
+
+
+
+
+        else
+
+
+
+
+
+
+
+        (
+
+
+
+
+
+
+
+            local defName = if gs.count == 1 then ("Cutlist_" + gs[1].name + ".csv") else "Cutlist_Project.csv"
+
+
+
+
+
+
+
+            local sp = getSaveFileName caption:"تصدير إكسيل" \
+
+
+
+
+
+
+
+                        filename:defName types:"CSV Files (*.csv)|*.csv|"
+
+
+
+
+
+
+
+            if sp != undefined do
+
+
+
+
+
+
+
+            (
+
+
+
+
+
+
+
+                local okFlag = false
+
+
+
+
+
+
+
+                try ( okFlag = PKD_ExportCSV gs sp )
+
+
+
+
+
+
+
+                catch
+
+
+
+
+
+
+
+                (
+
+
+
+
+
+
+
+                    okFlag = false
+
+
+
+
+
+
+
+                    messagebox ("حدث خطأ أثناء التصدير:\n\n" + (getCurrentException())) title:"خطأ"
+
+
+
+
+
+
+
+                )
+
+
+
+
+
+
+
+                if okFlag do
+
+
+
+
+
+
+
+                (
+
+
+
+
+
+
+
+                    lblInfo.text = "تم التصدير: " + gs.count as string + " وحدة"
+
+
+
+
+
+
+
+                    if rMat.chkOpenAfter.checked do
+
+
+
+
+
+
+
+                        try ( ShellLaunch sp "" ) catch ()
+
+
+
+
+
+
+
+                )
+
+
+
+
+
+
+
+            )
+
+
+
+
+
+
+
+        )
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    on btnExportSKP pressed do
+
+    (
+
+        local g = PKD_GetHead (if selection.count > 0 then selection[1] else undefined)
+
+        if g == undefined then
+
+            messagebox "يرجى تحديد وحدة للتصدير أولاً." title:"تنبيه"
+
+        else
+
+        (
+
+            local f = getSaveFileName caption:"Export for SketchUp" types:"OBJ Files (*.obj)|*.obj|FBX Files (*.fbx)|*.fbx|" filename:(g.name + ".obj")
+
+            if f != undefined do
+
+            (
+
+                select g
+
+                exportFile f #noPrompt selectedOnly:true
+
+                messagebox ("تم التصدير بنجاح:\n" + f + "\n\nيمكنك استيراد الملف في SketchUp عبر:\nFile > Import") title:"تم التصدير"
+
+            )
+
+        )
+
+    )
+
+
+
+
+
+    (
+
+
+
+
+
+
+
+        local g = PKD_GetHead (if selection.count > 0 then selection[1] else undefined)
+
+
+
+
+
+
+
+        if g == undefined then
+
+
+
+
+
+
+
+            messagebox "يرجى تحديد وحدة للتصدير أولاً." title:"تنبيه"
+
+
+
+
+
+
+
+        else
+
+
+
+
+
+
+
+        (
+
+
+
+
+
+
+
+            local f = getSaveFileName caption:"Export to SketchUp" types:"SketchUp (*.skp)|*.skp" filename:(g.name + ".skp")
+
+
+
+
+
+
+
+            if f != undefined do
+
+
+
+
+
+
+
+            (
+
+
+
+
+
+
+
+                select g
+
+
+
+
+
+
+
+                exportFile f #noPrompt selectedOnly:true
+
+
+
+
+
+
+
+            )
+
+
+
+
+
+
+
+        )
+
+
+
+
+
+
+
+    )
+
+
+
+
+
+
+
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+-- 11. LAUNCHER
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+macroScript PKD_BaseUnit_V10
+
+
+
+
+
+
+
+    category:"Pro Kitchen Design"
+
+
+
+
+
+
+
+    buttonText:"PKD Base Unit"
+
+
+
+
+
+
+
+    tooltip:"رسم وحدة سفلية - ثنائي اللغة v10"
+
+
+
+
+
+
+
+(
+
+
+
+
+
+
+
+    try ( destroyDialog PKD_MainUI ) catch ()
+
+
+
+
+
+
+
+    createDialog PKD_MainUI
+
+
+
+
+
+
+
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+try ( destroyDialog PKD_MainUI ) catch ()
+
+
+
+
+
+
+
+createDialog PKD_MainUI
+
+
+
+
+
+
