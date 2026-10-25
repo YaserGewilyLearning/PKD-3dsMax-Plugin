@@ -1,7 +1,7 @@
 macroScript PKD_KitchenUnit
 category:"Pro Kitchen Design"
 tooltip:"Build Kitchen Units - PKD v14.0 Modular"
-buttonText:"PKD Builder 14"
+buttonText:"PKD Builder"
 (
     on execute do
     (
