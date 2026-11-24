@@ -1,4 +1,7 @@
 @echo off
+set "GIT_TERMINAL_PROMPT=0"
+set "GIT_ASK_YESNO=false"
+
 echo Starting Daily GitHub Sync for PKD 3ds Max Plugin...
 cd /d "d:\Social\Plugin\AI Agent\3ds Max Plugin"
 
@@ -11,9 +14,9 @@ if "%GIT_CHANGES%"=="" (
 ) else (
     echo Changes found. Syncing to GitHub...
     git add .
-    git commit -m "Daily auto-sync backup: %date% %time%"
+    git -c gc.auto=0 commit -m "Daily auto-sync backup: %date% %time%"
     git push origin main
     echo Sync complete!
 )
 
-del %temp%\git_status.txt
+del %temp%\git_status.txt 2>nul
